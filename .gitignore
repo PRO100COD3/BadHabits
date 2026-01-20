@@ -91,3 +91,7 @@ iOSInjectionProject/
 
 # macOS
 .DS_Store
+
+# Build logs
+*.log
+build.log

@@ -67,7 +67,7 @@ struct CircularProgressView: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.3), value: progress)
             
-            VStack(spacing: 8) {
+            VStack(spacing: 0) {
                 Text("\(days)")
                     .font(.custom("Onest", size: 50))
                     .fontWeight(.medium)
@@ -77,11 +77,13 @@ struct CircularProgressView: View {
                     .font(.custom("Onest", size: 18))
                     .fontWeight(.medium)
                     .foregroundColor(.white.opacity(0.8))
+                    .padding(.top, 4)
                 
                 Text(timeString)
                     .font(.custom("Onest", size: 24))
                     .fontWeight(.medium)
                     .foregroundColor(.white)
+                    .padding(.top, 16)
             }
         }
     }
@@ -144,7 +146,7 @@ struct Timer: View {
                         .foregroundColor(.white)
                         .padding(.top, 46)
                         .padding(.horizontal, 20)
-                        .onChange(of: text) { oldValue, newValue in
+                        .onChange(of: text) { newValue in
                             if newValue.count > maxLength {
                                 text = String(newValue.prefix(maxLength))
                                 
