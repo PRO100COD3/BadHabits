@@ -44,6 +44,7 @@ struct TimerView: View {
                         .frame(width: 44, height: 44)
                         .padding(.top, 3)
                         .padding(.trailing, 14)
+                        .pressAnimation()
                     }
                     
                     TextField("", text: $viewModel.text)
@@ -93,6 +94,7 @@ struct TimerView: View {
                     .frame(width: 115, height: 37)
                     .disabled(!viewModel.isRunning && !viewModel.canStartTimer)
                     .padding(.top, 68)
+                    .pressAnimation()
                     
                     HStack(spacing: 80) {
                         Button(action: {
@@ -104,6 +106,7 @@ struct TimerView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
                         }
+                        .pressAnimation()
                         
                         Button(action: {
                             // Действие для второй кнопки
@@ -115,6 +118,7 @@ struct TimerView: View {
                                 .padding(.vertical, 16)
                                 
                         }
+                        .pressAnimation()
                         
                         Button(action: {
                             // Действие для третьей кнопки
@@ -125,6 +129,7 @@ struct TimerView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
                         }
+                        .pressAnimation()
                     }
                     .padding(.top, 57)
                     .padding([.leading, .trailing], 67)
