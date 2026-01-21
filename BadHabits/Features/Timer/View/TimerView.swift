@@ -67,13 +67,13 @@ struct TimerView: View {
                     .padding(.top, 53)
                     
                     Button(action: {
-                        if viewModel.isRunning {
-                            viewModel.restartTimer()
+                        if viewModel.shouldShowRestart {
+                            viewModel.showRestartDialog()
                         } else {
                             viewModel.startTimer()
                         }
                     }) {
-                        Text(viewModel.isRunning ? "РЕСТАРТ" : "СТАРТ")
+                        Text(viewModel.shouldShowRestart ? "РЕСТАРТ" : "СТАРТ")
                             .font(.custom("Onest", size: 20))
                             .fontWeight(.regular)
                             .foregroundColor(.white)
@@ -92,7 +92,7 @@ struct TimerView: View {
                             }
                     }
                     .frame(width: 115, height: 37)
-                    .disabled(!viewModel.isRunning && !viewModel.canStartTimer)
+                    .disabled(!viewModel.shouldShowRestart && !viewModel.canStartTimer)
                     .padding(.top, 68)
                     .pressAnimation()
                     
@@ -151,6 +151,30 @@ struct TimerView: View {
                 }
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.showLimitAlert)
+            .overlay(alignment: .top) {
+                if viewModel.showRestartReasonLimitAlert {
+                    CharacterLimitAlert(maxLength: viewModel.restartReasonMaxLength, isPresented: $viewModel.showRestartReasonLimitAlert)
+                        .padding(24)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.showRestartReasonLimitAlert)
+            .overlay {
+                RestartDialog(
+                    isPresented: $viewModel.shouldShowRestartDialog,
+                    reason: $viewModel.restartReason,
+                    characterLimit: viewModel.restartReasonMaxLength,
+                    onConfirm: {
+                        viewModel.confirmRestart()
+                    },
+                    onCancel: {
+                        viewModel.cancelRestart()
+                    },
+                    onCharacterLimitExceeded: {
+                        viewModel.showRestartReasonCharacterLimitAlert()
+                    }
+                )
+            }
         }
     }
 }

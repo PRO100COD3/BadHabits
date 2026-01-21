@@ -16,6 +16,12 @@ class TimerViewModel: ObservableObject {
     @Published var isRunning = false
     @Published var days = 0
     @Published var elapsedSeconds: TimeInterval = 0
+    @Published var shouldShowRestartDialog = false
+    @Published var restartReason: String = ""
+    @Published var showRestartReasonLimitAlert = false
+    
+    private var hasStarted = false
+    private var restartReasonAlertHideTask: DispatchWorkItem?
     
     init(initialText: String = "") {
         self.text = initialText
@@ -23,6 +29,7 @@ class TimerViewModel: ObservableObject {
     
     private var timer: Foundation.Timer?
     let maxLength = 17
+    let restartReasonMaxLength = 30
     private let targetSeconds: TimeInterval = 24 * 60 * 60
     private var alertHideTask: DispatchWorkItem?
     
@@ -41,6 +48,10 @@ class TimerViewModel: ObservableObject {
         !text.isEmpty
     }
     
+    var shouldShowRestart: Bool {
+        hasStarted
+    }
+    
     func handleTextChange(_ newValue: String) {
         if newValue.count > maxLength {
             text = String(newValue.prefix(maxLength))
@@ -52,6 +63,7 @@ class TimerViewModel: ObservableObject {
     
     func startTimer() {
         guard canStartTimer else { return }
+        hasStarted = true
         isRunning = true
         timer = Foundation.Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
@@ -61,11 +73,27 @@ class TimerViewModel: ObservableObject {
         }
     }
     
-    func restartTimer() {
+    func showRestartDialog() {
+        withAnimation(.easeInOut(duration: 0.225)) {
+            shouldShowRestartDialog = true
+        }
+    }
+    
+    func confirmRestart() {
         stopTimer()
         days = 0
         elapsedSeconds = 0
-        startTimer()
+        restartReason = ""
+        withAnimation(.easeInOut(duration: 0.18)) {
+            shouldShowRestartDialog = false
+        }
+    }
+    
+    func cancelRestart() {
+        restartReason = ""
+        withAnimation(.easeInOut(duration: 0.18)) {
+            shouldShowRestartDialog = false
+        }
     }
     
     func stopTimer() {
@@ -109,8 +137,26 @@ class TimerViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: hideTask)
     }
     
+    func showRestartReasonCharacterLimitAlert() {
+        guard !showRestartReasonLimitAlert else { return }
+        
+        showRestartReasonLimitAlert = true
+        
+        restartReasonAlertHideTask?.cancel()
+        
+        let hideTask = DispatchWorkItem { [weak self] in
+            Task { @MainActor in
+                self?.showRestartReasonLimitAlert = false
+            }
+        }
+        restartReasonAlertHideTask = hideTask
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: hideTask)
+    }
+    
     deinit {
         timer?.invalidate()
         alertHideTask?.cancel()
+        restartReasonAlertHideTask?.cancel()
     }
 }
