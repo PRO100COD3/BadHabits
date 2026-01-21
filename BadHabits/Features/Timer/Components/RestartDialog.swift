@@ -164,10 +164,6 @@ struct RestartDialog: View {
             .padding(.horizontal, 37)
             .opacity(isPresented ? 1.0 : 0.0)
             .scaleEffect(isPresented ? 1.0 : 0.95)
-            .animation(
-                .easeInOut(duration: isPresented ? 0.225 : 0.18),
-                value: isPresented
-            )
         }
     }
     

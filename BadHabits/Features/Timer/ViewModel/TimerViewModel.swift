@@ -23,8 +23,21 @@ class TimerViewModel: ObservableObject {
     private var hasStarted = false
     private var restartReasonAlertHideTask: DispatchWorkItem?
     
+    private var startDate: Date?
+    private var savedDays: Int = 0
+    private var savedElapsedSeconds: TimeInterval = 0
+    
+    private let userDefaults = UserDefaults.standard
+    private let startDateKey = "TimerStartDate"
+    private let savedDaysKey = "TimerSavedDays"
+    private let savedElapsedSecondsKey = "TimerSavedElapsedSeconds"
+    private let isRunningKey = "TimerIsRunning"
+    private let timerTextKey = "TimerText"
+    
     init(initialText: String = "") {
         self.text = initialText
+        loadTimerState()
+        setupNotifications()
     }
     
     private var timer: Foundation.Timer?
@@ -65,6 +78,16 @@ class TimerViewModel: ObservableObject {
         guard canStartTimer else { return }
         hasStarted = true
         isRunning = true
+        
+        savedDays = days
+        savedElapsedSeconds = elapsedSeconds
+        
+        if startDate == nil {
+            startDate = Date()
+        }
+        
+        saveTimerState()
+        
         timer = Foundation.Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             Task { @MainActor in
@@ -80,10 +103,20 @@ class TimerViewModel: ObservableObject {
     }
     
     func confirmRestart() {
+        let wasRunning = isRunning
         stopTimer()
         days = 0
         elapsedSeconds = 0
         restartReason = ""
+        startDate = nil
+        savedDays = 0
+        savedElapsedSeconds = 0
+        clearTimerState()
+        
+        if wasRunning && canStartTimer {
+            startTimer()
+        }
+        
         withAnimation(.easeInOut(duration: 0.18)) {
             shouldShowRestartDialog = false
         }
@@ -100,6 +133,8 @@ class TimerViewModel: ObservableObject {
         timer?.invalidate()
         timer = nil
         isRunning = false
+        startDate = nil
+        clearTimerState()
     }
     
     func close() {
@@ -107,17 +142,141 @@ class TimerViewModel: ObservableObject {
     }
     
     private func tick() async {
-        elapsedSeconds += 1
+        updateElapsedTime()
         
         if elapsedSeconds >= targetSeconds {
             completeCycle()
         }
+        
+        saveTimerState()
+    }
+    
+    private func updateElapsedTime() {
+        guard let startDate = startDate else { return }
+        
+        let currentTime = Date()
+        let totalElapsed = currentTime.timeIntervalSince(startDate) + savedElapsedSeconds
+        
+        let fullCycles = Int(totalElapsed / targetSeconds)
+        days = savedDays + fullCycles
+        
+        elapsedSeconds = totalElapsed.truncatingRemainder(dividingBy: targetSeconds)
     }
     
     private func completeCycle() {
         days += 1
         stopTimer()
         elapsedSeconds = 0
+    }
+        
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                await self?.applicationWillEnterForeground()
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                await self?.applicationDidEnterBackground()
+            }
+        }
+    }
+    
+    @MainActor
+    private func applicationWillEnterForeground() async {
+        if isRunning {
+            updateElapsedTime()
+            if timer == nil {
+                timer = Foundation.Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                    guard let self = self else { return }
+                    Task { @MainActor in
+                        await self.tick()
+                    }
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func applicationDidEnterBackground() async {
+        if isRunning {
+            updateElapsedTime()
+            saveTimerState()
+        }
+    }
+    
+    private func loadTimerState() {
+        if let savedStartDate = userDefaults.object(forKey: startDateKey) as? Date {
+            startDate = savedStartDate
+            savedDays = userDefaults.integer(forKey: savedDaysKey)
+            savedElapsedSeconds = userDefaults.double(forKey: savedElapsedSecondsKey)
+            let wasRunning = userDefaults.bool(forKey: isRunningKey)
+            isRunning = wasRunning
+            hasStarted = wasRunning
+            
+            if let savedText = userDefaults.string(forKey: timerTextKey) {
+                if text.isEmpty {
+                    text = savedText
+                }
+            }
+            
+            if wasRunning {
+                updateElapsedTime()
+                timer = Foundation.Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                    guard let self = self else { return }
+                    Task { @MainActor in
+                        await self.tick()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func saveTimerState() {
+        if let startDate = startDate {
+            userDefaults.set(startDate, forKey: startDateKey)
+            userDefaults.set(savedDays, forKey: savedDaysKey)
+            userDefaults.set(savedElapsedSeconds, forKey: savedElapsedSecondsKey)
+            userDefaults.set(isRunning, forKey: isRunningKey)
+            userDefaults.set(text, forKey: timerTextKey)
+        }
+    }
+    
+    nonisolated private func saveTimerStateSync() {
+        let defaults = UserDefaults.standard
+        if let savedStartDate = defaults.object(forKey: startDateKey) as? Date {
+            let currentTime = Date()
+            let savedDaysValue = defaults.integer(forKey: savedDaysKey)
+            let savedElapsedValue = defaults.double(forKey: savedElapsedSecondsKey)
+            let totalElapsed = currentTime.timeIntervalSince(savedStartDate) + savedElapsedValue
+            let fullCycles = Int(totalElapsed / targetSeconds)
+            let finalDays = savedDaysValue + fullCycles
+            let finalElapsed = totalElapsed.truncatingRemainder(dividingBy: targetSeconds)
+            
+            defaults.set(savedStartDate, forKey: startDateKey)
+            defaults.set(finalDays, forKey: savedDaysKey)
+            defaults.set(finalElapsed, forKey: savedElapsedSecondsKey)
+            defaults.set(true, forKey: isRunningKey)
+        }
+    }
+    
+    private func clearTimerState() {
+        userDefaults.removeObject(forKey: startDateKey)
+        userDefaults.removeObject(forKey: savedDaysKey)
+        userDefaults.removeObject(forKey: savedElapsedSecondsKey)
+        userDefaults.removeObject(forKey: isRunningKey)
+        userDefaults.removeObject(forKey: timerTextKey)
     }
     
     private func showCharacterLimitAlert() {
@@ -158,5 +317,11 @@ class TimerViewModel: ObservableObject {
         timer?.invalidate()
         alertHideTask?.cancel()
         restartReasonAlertHideTask?.cancel()
+        NotificationCenter.default.removeObserver(self)
+        
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: isRunningKey) {
+            saveTimerStateSync()
+        }
     }
 }
