@@ -48,6 +48,7 @@ struct RestartDialog: View {
                     GeometryReader { geometry in
                         RoundedRectangle(cornerRadius: 10)
                             .fill(Color(hex: "#F7F7F7"))
+                            .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 4)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 10)
                                     .stroke(isOverLimit ? Color(hex: "#E75454") : Color(hex: "#E6E6E6"), lineWidth: 1)
@@ -108,13 +109,14 @@ struct RestartDialog: View {
                         }
                     }) {
                         Text("ОТМЕНА")
-                            .font(.custom("Onest", size: 16))
+                            .font(.custom("Onest", size: 14))
                             .fontWeight(.medium)
                             .foregroundColor(Color(hex: "#6E6E6E"))
                             .frame(maxWidth: .infinity, maxHeight: 36)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
                                     .fill(Color.white)
+                                    .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 4)
                                     .overlay {
                                         RoundedRectangle(cornerRadius: 10)
                                             .stroke(Color(hex: "#CCCCCCCC"), lineWidth: 1)
@@ -132,11 +134,12 @@ struct RestartDialog: View {
                         Text("РЕСТАРТ")
                             .font(.custom("Onest", size: 14))
                             .fontWeight(.medium)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color(hex: "#F4F4F4"))
                             .frame(maxWidth: .infinity, maxHeight: 36)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
                                     .fill(Color.redButton)
+                                    .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 4)
                                     .overlay {
                                         RoundedRectangle(cornerRadius: 10)
                                             .stroke(Color(hex: "#D0D0D0E5"), lineWidth: 1)
@@ -160,6 +163,7 @@ struct RestartDialog: View {
                             endPoint: .bottom
                         )
                     )
+                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 4)
             }
             .padding(.horizontal, 37)
             .opacity(isPresented ? 1.0 : 0.0)

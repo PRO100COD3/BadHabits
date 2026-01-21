@@ -13,7 +13,7 @@ struct CharacterLimitAlert: View {
     
     var body: some View {
         if isPresented {
-            HStack(spacing: 12) {
+            HStack {
                 Text("Максимальное кол-во символов - \(maxLength)")
                     .font(.custom("Onest", size: 16))
                     .fontWeight(.semibold)

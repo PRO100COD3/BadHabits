@@ -19,6 +19,7 @@ class TimerViewModel: ObservableObject {
     @Published var shouldShowRestartDialog = false
     @Published var restartReason: String = ""
     @Published var showRestartReasonLimitAlert = false
+    @Published var shouldShowCloseDialog = false
     
     private var hasStarted = false
     private var restartReasonAlertHideTask: DispatchWorkItem?
@@ -138,8 +139,22 @@ class TimerViewModel: ObservableObject {
         clearTimerState()
     }
     
-    func close() {
-        stopTimer()
+    func showCloseDialog() {
+        withAnimation(.easeInOut(duration: 0.225)) {
+            shouldShowCloseDialog = true
+        }
+    }
+    
+    func confirmClose() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            shouldShowCloseDialog = false
+        }
+    }
+    
+    func cancelClose() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            shouldShowCloseDialog = false
+        }
     }
     
     private func tick() async {
@@ -164,8 +179,11 @@ class TimerViewModel: ObservableObject {
     
     private func completeCycle() {
         days += 1
-        stopTimer()
+        savedDays = days
         elapsedSeconds = 0
+        savedElapsedSeconds = 0
+        startDate = Date()
+        saveTimerState()
     }
         
     private func setupNotifications() {

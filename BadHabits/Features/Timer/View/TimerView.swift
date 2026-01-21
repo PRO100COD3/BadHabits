@@ -11,6 +11,7 @@ struct TimerView: View {
     let initialText: String
     
     @StateObject private var viewModel: TimerViewModel
+    @Environment(\.dismiss) private var dismiss
     
     init(initialText: String = "") {
         self.initialText = initialText
@@ -29,7 +30,7 @@ struct TimerView: View {
                     HStack {
                         Spacer()
                         Button(action: {
-                            viewModel.close()
+                            viewModel.showCloseDialog()
                         }) {
                             ZStack {
                                 Circle()
@@ -136,6 +137,15 @@ struct TimerView: View {
                     Spacer()
                 }
             }
+            .blur(radius: viewModel.shouldShowRestartDialog || viewModel.shouldShowCloseDialog ? 8 : 0)
+            .overlay {
+                if viewModel.shouldShowRestartDialog || viewModel.shouldShowCloseDialog {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.225), value: viewModel.shouldShowRestartDialog || viewModel.shouldShowCloseDialog)
+                }
+            }
             .simultaneousGesture(
                 TapGesture()
                     .onEnded { _ in
@@ -158,7 +168,7 @@ struct TimerView: View {
                 }
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.showRestartReasonLimitAlert)
-            .overlay {
+            .overlay(alignment: .top) {
                 RestartDialog(
                     isPresented: $viewModel.shouldShowRestartDialog,
                     reason: $viewModel.restartReason,
@@ -173,11 +183,25 @@ struct TimerView: View {
                         viewModel.showRestartReasonCharacterLimitAlert()
                     }
                 )
+                .padding(.top, 238)
+            }
+            .overlay(alignment: .top) {
+                ConfirmationDialog(
+                    isPresented: $viewModel.shouldShowCloseDialog,
+                    onConfirm: {
+                        viewModel.confirmClose()
+                        dismiss()
+                    },
+                    onCancel: {
+                        viewModel.cancelClose()
+                    }
+                )
+                .padding(.top, 270)
             }
         }
     }
 }
 
 #Preview {
-    TimerView(initialText: "На кетодиете")
+    TimerView(initialText: "")
 }
