@@ -188,7 +188,7 @@ struct RestartDialog: View {
             context: nil
         )
         
-        let calculatedHeight = ceil(boundingRect.height) + 14 + 17
+        let calculatedHeight = ceil(boundingRect.height) + 14 + 16
         
         withAnimation(.easeInOut(duration: 0.15)) {
             textEditorHeight = min(max(calculatedHeight, minHeight), maxHeight)
