@@ -12,6 +12,28 @@ struct CircularProgressView: View {
     let days: Int
     let timeString: String
     
+    private var daysWord: String {
+        daysDeclension(days)
+    }
+    
+    private func daysDeclension(_ number: Int) -> String {
+        let mod10 = number % 10
+        let mod100 = number % 100
+        
+        if mod100 >= 11 && mod100 <= 14 {
+            return "дней"
+        }
+        
+        switch mod10 {
+        case 1:
+            return "день"
+        case 2, 3, 4:
+            return "дня"
+        default:
+            return "дней"
+        }
+    }
+    
     var body: some View {
         ZStack {
             Circle()
@@ -26,7 +48,6 @@ struct CircularProgressView: View {
                 )
                 .frame(width: 280, height: 280)
                 .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 0.3), value: progress)
             
             VStack(spacing: 0) {
                 Text("\(days)")
@@ -34,7 +55,7 @@ struct CircularProgressView: View {
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                 
-                Text("дней")
+                Text(daysWord)
                     .font(.custom("Onest", size: 18))
                     .fontWeight(.medium)
                     .foregroundColor(.white.opacity(0.8))

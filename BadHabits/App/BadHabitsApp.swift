@@ -11,7 +11,7 @@ import SwiftUI
 struct BadHabitsApp: App {
     var body: some Scene {
         WindowGroup {
-            TimerView(initialText: "На кетодиете")
+            TimerView()
         }
     }
 }

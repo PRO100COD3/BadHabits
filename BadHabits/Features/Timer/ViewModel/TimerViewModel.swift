@@ -57,10 +57,6 @@ class TimerViewModel: ObservableObject {
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
     
-    var canStartTimer: Bool {
-        !text.isEmpty
-    }
-    
     var shouldShowRestart: Bool {
         hasStarted
     }
@@ -72,10 +68,15 @@ class TimerViewModel: ObservableObject {
         } else {
             text = newValue
         }
+        
+        userDefaults.set(text, forKey: timerTextKey)
+        
+        if isRunning {
+            saveTimerState()
+        }
     }
     
     func startTimer() {
-        guard canStartTimer else { return }
         hasStarted = true
         isRunning = true
         
@@ -113,7 +114,7 @@ class TimerViewModel: ObservableObject {
         savedElapsedSeconds = 0
         clearTimerState()
         
-        if wasRunning && canStartTimer {
+        if wasRunning {
             startTimer()
         }
         
@@ -147,8 +148,6 @@ class TimerViewModel: ObservableObject {
         if elapsedSeconds >= targetSeconds {
             completeCycle()
         }
-        
-        saveTimerState()
     }
     
     private func updateElapsedTime() {

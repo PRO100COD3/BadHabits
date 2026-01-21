@@ -92,7 +92,6 @@ struct TimerView: View {
                             }
                     }
                     .frame(width: 115, height: 37)
-                    .disabled(!viewModel.shouldShowRestart && !viewModel.canStartTimer)
                     .padding(.top, 68)
                     .pressAnimation()
                     
