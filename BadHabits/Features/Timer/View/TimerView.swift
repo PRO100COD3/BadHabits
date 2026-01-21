@@ -30,7 +30,7 @@ struct TimerView: View {
                     HStack {
                         Spacer()
                         Button(action: {
-                            viewModel.showCloseDialog()
+                            dismiss()
                         }) {
                             ZStack {
                                 Circle()
@@ -121,7 +121,7 @@ struct TimerView: View {
                         .pressAnimation()
                         
                         Button(action: {
-                            // Действие для третьей кнопки
+                            viewModel.showCloseDialog()
                         }) {
                             Image("trash")
                                 .font(.system(size: 24))
